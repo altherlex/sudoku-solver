@@ -54,14 +54,9 @@ class Sudoku
 		}
 		arr_sum_valid.reduce(:+)==45
 	end
-	def square_valid?(square_num, val)
+	def square_valid?(square_key, val)
 		_all_valid = []
-		arr_pos = SQUARES[square_num.to_s]
-		arr_pos.each do |pos| 
-			node_analysed = get(pos)
-			# puts 'k'*50
-			# puts node_analysed.inspect
-			# puts 'k'*50
+		get_square(square_key).each do |node_analysed| 
 			if node_analysed.defined?
 				_all_valid << (node_analysed.val != val)
 			end
@@ -73,7 +68,7 @@ class Sudoku
 		(0...9).to_a.each_with_index do |i, index|
 			node_analysed = get(row_num, index)
 			if node_analysed.defined?
-				_all_valid << node_analysed.val != val	
+				_all_valid << (node_analysed.val != val)	
 			end
 		end
 		!_all_valid.include?(false)
@@ -83,7 +78,7 @@ class Sudoku
 		(0...9).to_a.each_with_index do |i, index|
 			node_analysed = get(index, col_num)
 			if node_analysed.defined?
-				_all_valid << node_analysed.val != val	
+				_all_valid << (node_analysed.val != val)	
 			end
 		end
 		!_all_valid.include?(false)
@@ -91,7 +86,6 @@ class Sudoku
 	def valid?(node, val)
 		line_valid?(node.row, val) and col_valid?(node.col, val) and square_valid?( get_square_key(node.row, node.col), val )
 	end
-	# TODO Escrever minitests
 	def load_possibilities!
 		(1..9).to_a.each_with_index do |i, line|
 			(1..9).to_a.each_with_index do |number, col|
@@ -104,7 +98,7 @@ class Sudoku
 		if args.size==1 and args.first.is_a? String
 			row, col = args.first.split('x').map(&:to_i)
 		else args.size==2
-			row, col = args
+			row, col = args.map(&:to_i)
 		end
 		self.data.detect{|node| node.row==row and node.col==col}
 	end
@@ -118,9 +112,6 @@ class Sudoku
 		arr_nodes = []
 		SQUARES[square_key.to_s].each do |pos| 
 			arr_nodes << get(pos)
-			puts '--'*20
-			puts get(pos).inspect
-			puts '--'*20
 		end
 		arr_nodes
 	end
@@ -130,7 +121,6 @@ class Sudoku
 	end
 end
 class Node
-	# {l:1, j:1, possibilities:[1,2,3], defined:false, val:nil}
 	attr_accessor :col, :row, :possibilities, :defined, :val
 	def initialize(options, val=nil)
 		@val= val
@@ -195,16 +185,35 @@ describe Sudoku do
     it "#get_square_key should get a specific node" do
   		@game.get_square_key(1, 2).must_equal '1'
     end
-    it "#get_square" do
-  		# @game.get_square(1).size.must_equal 9
-  		# @game.get_square(1).map(&:row).must_equal false
-  		# @game.get_square(1).map(&:col).must_equal false
-  		# @game.get_square(1).map(&:val).must_equal false
+    it "#get_square number #1" do
+  		@game.get_square(1).size.must_equal 9
+  		@game.get_square(1).map(&:row).must_equal [0, 0, 0, 1, 1, 1, 2, 2, 2]
+  		@game.get_square(1).map(&:col).must_equal [0, 1, 2, 0, 1, 2, 0, 1, 2]
+  		@game.get_square(1).map(&:val).must_equal [nil, 8, nil, 6, nil, 2, nil, 2, nil]
     end
   end
-  describe "validate square" do
+  describe "#square_valid?" do
+  	it "# 1 is valid for first square" do
+  		@game.square_valid?('1', 1).must_equal true
+  	end
   	it "# 8 ins't valid for first square" do
-  		# @game.square_valid?('1', 8).must_equal false
+  		@game.square_valid?('1', 8).must_equal false
+  	end
+  end
+  describe "#col_valid?" do
+  	it "# 3 is valid for first column" do
+  		@game.col_valid?(0, 3).must_equal true
+  	end
+  	it "# 6 ins't valid for first col" do
+  		@game.col_valid?(0, 6).must_equal false
+  	end
+  end
+  describe "#line_valid?" do
+  	it "# 2 is valid for first line" do
+  		@game.line_valid?(0, 2).must_equal true
+  	end
+  	it "# 8 ins't valid for first line" do
+  		@game.line_valid?(0, 8).must_equal false
   	end
   end
 end
