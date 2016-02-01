@@ -22,7 +22,7 @@ class Sudoku
 		arr_initial = [
 			[[ ],[8],[ ],  [ ],[ ],[ ],  [5],[ ],[3]],
 			[[6],[ ],[2],  [ ],[ ],[9],  [ ],[7],[ ]],
-			[[ ],[2],[ ],  [4],[3],[ ],  [ ],[ ],[ ]],
+			[[ ],[5],[ ],  [4],[3],[ ],  [ ],[ ],[ ]],
 
 			[[8],[ ],[ ],  [1],[ ],[7],  [ ],[ ],[5]],
 			[[ ],[ ],[ ],  [9],[ ],[ ],  [7],[ ],[1]],
@@ -88,14 +88,23 @@ class Sudoku
 	def valid?(node, val)
 		line_valid?(node.row, val) and col_valid?(node.col, val) and square_valid?( get_square_key(node.row, node.col), val )
 	end
-	def load_possibilities!
-		(0...9).to_a.each_with_index do |i, line|
-			(0...9).to_a.each_with_index do |number, col|
-				node = get(line,col)
-				node.possibilities<<number if !node.defined? and valid?(node, number)
+	
+	def load_possibilities_for(node)
+		if !node.defined?
+			(1..9).to_a.each_with_index do |val, index|
+				node.possibilities << val if valid?(node, val)
 			end
+			node.possibilities.uniq!
+		end
+		node.possibilities
+	end
+
+	def load_possibilities!
+		data.each do |node| 
+			load_possibilities_for(node)
 		end
 	end
+
 	def get(*args)
 		if args.size==1 and args.first.is_a? String
 			row, col = args.first.split('x').map(&:to_i)
@@ -130,7 +139,7 @@ class Sudoku
 			end
 		end		
 		
-		table.style = {:width => 140, :padding_left => 3, :border_x => "=", :border_i => "x"}
+		table.style = {:width => 195	, :padding_left => 3, :border_x => "=", :border_i => "x"}
 		puts table
 	end
 end
@@ -179,8 +188,8 @@ describe Sudoku do
     it "data should be an Array of Node objects" do
       @game.data.first.class.must_equal Node
     end
-    it "data should be some specific noe values" do
-     	@game.data.map(&:val).compact.must_equal [8, 5, 3, 6, 2, 9, 7, 2, 4, 3, 8, 1, 7, 5, 9, 7, 1, 7, 2, 6, 2, 4, 1, 4, 9]
+    it "data should be some specific node values" do
+     	@game.data.map(&:val).compact.must_equal [8, 5, 3, 6, 2, 9, 7, 5, 4, 3, 8, 1, 7, 5, 9, 7, 1, 7, 2, 6, 2, 4, 1, 4, 9]
     end
     it "data should be 81 positions" do
       @game.data.size.must_equal 81
@@ -203,7 +212,7 @@ describe Sudoku do
   		@game.get_square(1).size.must_equal 9
   		@game.get_square(1).map(&:row).must_equal [0, 0, 0, 1, 1, 1, 2, 2, 2]
   		@game.get_square(1).map(&:col).must_equal [0, 1, 2, 0, 1, 2, 0, 1, 2]
-  		@game.get_square(1).map(&:val).must_equal [nil, 8, nil, 6, nil, 2, nil, 2, nil]
+  		@game.get_square(1).map(&:val).must_equal [nil, 8, nil, 6, nil, 2, nil, 5, nil]
     end
   end
   describe "#square_valid?" do
@@ -230,9 +239,23 @@ describe Sudoku do
   		@game.line_valid?(0, 8).must_equal false
   	end
   end
-  describe "#load_possibilities!" do
-  	it "should load all possibilities" do
-		  @game.load_possibilities!.must_equal true
+  describe "#valid?" do
+  	before do
+  		@node = @game.data.first
+  	end
+  	it "#1 is valid for first block" do
+  		@game.valid?(@node, 1).must_equal true
+  	end
+  	it "#8 ins't valid for first block" do
+  		@game.valid?(@node, 8).must_equal false
+  	end
+  end
+  describe "#load_possibilities_for" do
+  	before do
+  		@node = @game.data.first
+  	end
+  	it "should load the possibilities for one block" do
+  		@game.load_possibilities_for(@node).must_equal [1, 4, 7, 9]
   	end
   end
 end
