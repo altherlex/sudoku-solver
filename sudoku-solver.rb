@@ -1,4 +1,5 @@
 require 'terminal-table'
+require 'colorize'
 
 class Sudoku
 	SQUARES = {
@@ -97,10 +98,21 @@ class Sudoku
 		end
 		node.possibilities
 	end
-
+	# TODO
+	# def reload_col_possiblities
+	# end
+	# def reload_row_possiblities
+	# end
+	# def reload_square_possiblities
+	# end
 	def load_possibilities!
 		data.each do |node| 
 			load_possibilities_for(node)
+			# TODO: Recarregar possibilidades para a coluna, linha e bloco
+			# if node.possibilities.size==0
+			# 	load_possibilities_for(node)
+			# 	node.defined=true
+			# end
 		end
 	end
 
@@ -131,14 +143,14 @@ class Sudoku
 		table = Terminal::Table.new do |t|
 			rows = data.each_slice(9).to_a
 			rows.each_with_index do |row, index|
-				t.add_row row.map{|node| node.val||node.possibilities_show}
+				t.add_row row.map{|node| (node.val.nil?) ? node.possibilities_show : node.val_color}
 				if separator_for.include?(index)
 				  t.add_separator
 				end
 			end
 		end		
 		
-		table.style = {:width => 150, :padding_left => 0, :border_x => "=", :border_i => "x"}
+		table.style = {:width => 130, :padding_left => 0, :border_x => "=", :border_i => "x"}
 		puts table
 	end
 end
@@ -151,11 +163,19 @@ class Node
 		@possibilities = options[:possibilities] || []
 		@defined = !val.nil?
 	end
-	def defined?
-		@defined
+	def val_color(color=:green)
+		val.to_s.send(color)
+		# val.to_s.blue.on_red #colorize(:color => :light_blue, :background => :red)
 	end
 	def possibilities_show
-		self.possibilities.each_slice(2).to_a.join('-')#.gsub('], [', '\n').gsub('[[', '').gsub(']]', '')
+		if self.possibilities.size==1 
+			self.possibilities.each_slice(2).to_a.join('-').blue
+		else
+			self.possibilities.each_slice(2).to_a.join('-').red #.gsub('], [', '\n').gsub('[[', '').gsub(']]', '')
+		end
+	end
+	def defined?
+		@defined
 	end
 end
 
