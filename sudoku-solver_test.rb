@@ -3,12 +3,17 @@ require "./sudoku-solver"
 
 describe Node do
   before do
-    @node = Node.new({row:1, col:1}, 2)
+    @node = Node.new({row:1, col:1, possibilities:[1,4,7,9]}, 2)
   end
 
   describe "when initialize class" do
     it "should be Node class" do
       @node.class.must_equal Node
+    end
+  end
+  describe "#possibilities_show" do
+    it "should show the possibilities with break line" do
+      # @node.possibilities_show.must_equal "[[1, 4\n7, 9]]"
     end
   end
 end
