@@ -38,6 +38,8 @@ class Sudoku
 				@data << Node.new({col:index_col ,row:index_line}, number.first) 
 			end
 		end
+
+		load_possibilities!
 	end
 	def validation_line(line_num = 0)
 		@data.select{|node| node.row==line_num}.map{|node| node.val}.reduce(:+)==45
@@ -87,9 +89,9 @@ class Sudoku
 		line_valid?(node.row, val) and col_valid?(node.col, val) and square_valid?( get_square_key(node.row, node.col), val )
 	end
 	def load_possibilities!
-		(1..9).to_a.each_with_index do |i, line|
-			(1..9).to_a.each_with_index do |number, col|
-				node = data.get(line,col)
+		(0...9).to_a.each_with_index do |i, line|
+			(0...9).to_a.each_with_index do |number, col|
+				node = get(line,col)
 				node.possibilities<<number if !node.defined? and valid?(node, number)
 			end
 		end
@@ -116,7 +118,19 @@ class Sudoku
 		arr_nodes
 	end
 	def show
-		table = Terminal::Table.new :rows => data
+		# table = Terminal::Table.new :rows => data.map(&:val).each_slice(9).to_a
+		separator_for = [2,5,8]
+		table = Terminal::Table.new do |t|
+			rows = data.each_slice(9).to_a
+			rows.each_with_index do |row, index|
+				t.add_row row.map{|node| node.val||node.possibilities.inspect}
+				if separator_for.include?(index)
+				  t.add_separator
+				end
+			end
+		end		
+		
+		table.style = {:width => 140, :padding_left => 3, :border_x => "=", :border_i => "x"}
 		puts table
 	end
 end
@@ -214,6 +228,11 @@ describe Sudoku do
   	end
   	it "# 8 ins't valid for first line" do
   		@game.line_valid?(0, 8).must_equal false
+  	end
+  end
+  describe "#load_possibilities!" do
+  	it "should load all possibilities" do
+		  @game.load_possibilities!.must_equal true
   	end
   end
 end
