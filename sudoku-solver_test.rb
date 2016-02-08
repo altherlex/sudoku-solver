@@ -13,14 +13,28 @@ describe Node do
   end
   describe "#possibilities_show" do
     it "should show the possibilities with break line" do
-      # @node.possibilities_show.must_equal "[[1, 4\n7, 9]]"
+      skip '@node.possibilities_show.must_equal "[[1, 4\n7, 9]]"'
     end
   end
 end
 
 describe Sudoku do
   before do
-    @game = Sudoku.new
+    game = [
+      [[ ],[8],[ ],  [ ],[ ],[ ],  [5],[ ],[3]],
+      [[6],[ ],[2],  [ ],[ ],[9],  [ ],[7],[ ]],
+      [[ ],[5],[ ],  [4],[3],[ ],  [ ],[ ],[ ]],
+
+      [[8],[ ],[ ],  [1],[ ],[7],  [ ],[ ],[5]],
+      [[ ],[ ],[ ],  [9],[ ],[ ],  [7],[ ],[1]],
+      [[ ],[ ],[7],  [ ],[ ],[ ],  [ ],[ ],[ ]],
+
+      [[2],[ ],[ ],  [ ],[ ],[ ],  [ ],[ ],[ ]],
+      [[ ],[ ],[6],  [ ],[2],[ ],  [4],[1],[ ]],
+      [[ ],[ ],[ ],  [ ],[4],[ ],  [9],[ ],[ ]]
+    ]
+    @game = Sudoku.new(game)
+    # puts @game.show
   end
 
   describe "#initialize" do
@@ -43,8 +57,8 @@ describe Sudoku do
       @game.data[1].val.class.must_equal Fixnum
     end
   end
-  describe "getting node" do
-    it "#get should get a specific node" do
+  describe "get" do
+    it "#get should catch a specific node" do
   		node = @game.get('0x1')	
       node.row.must_equal 0
       node.col.must_equal 1
@@ -58,6 +72,10 @@ describe Sudoku do
   		@game.get_square(1).map(&:row).must_equal [0, 0, 0, 1, 1, 1, 2, 2, 2]
   		@game.get_square(1).map(&:col).must_equal [0, 1, 2, 0, 1, 2, 0, 1, 2]
   		@game.get_square(1).map(&:val).must_equal [nil, 8, nil, 6, nil, 2, nil, 5, nil]
+    end
+    it "#get_all_line row #0" do
+      @game.get_all_line(0, :row).map(&:val).must_equal [nil, 8, nil, nil, nil, nil, 5, nil, 3]
+      @game.get_all_line(0, :row).first.row.must_equal 0
     end
   end
   describe "#square_valid?" do
@@ -102,5 +120,31 @@ describe Sudoku do
   	it "should load the possibilities for one block" do
   		@game.load_possibilities_for(@node).must_equal [1, 4, 7, 9]
   	end
+  end
+  describe "#calculate!" do
+    before do
+      game = [
+        [[ ],[8],[ ],  [ ],[ ],[ ],  [5],[ ],[3]],
+        [[6],[ ],[2],  [ ],[ ],[9],  [ ],[7],[ ]],
+        [[ ],[5],[ ],  [4],[3],[ ],  [ ],[ ],[ ]],
+
+        [[8],[ ],[ ],  [1],[ ],[7],  [ ],[ ],[5]],
+        [[ ],[ ],[ ],  [9],[ ],[ ],  [7],[ ],[1]],
+        [[ ],[ ],[7],  [ ],[ ],[ ],  [ ],[ ],[ ]],
+
+        [[2],[ ],[ ],  [ ],[ ],[ ],  [ ],[ ],[ ]],
+        [[ ],[ ],[6],  [ ],[2],[ ],  [4],[1],[ ]],
+        [[ ],[ ],[ ],  [ ],[4],[ ],  [9],[ ],[ ]]
+      ]
+      @game = Sudoku.new(game)
+    end
+    it "should calculate! the row #0" do
+      skip "@game.calculate!(0, :row).must_equal false"
+    end
+    it "should calculate! the square #1" do
+      @game.calculate!(1, :square)
+      @game.get('1x1').defined.must_equal true
+      @game.get('1x1').val.must_equal 3
+    end
   end
 end

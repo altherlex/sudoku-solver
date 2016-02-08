@@ -18,8 +18,8 @@ class Sudoku
 
 	attr_accessor :data
 
-	def initialize
-		arr_initial = [
+	def initialize(arr_initial=nil)
+		arr_initial = arr_initial || [
 			[[ ],[8],[ ],  [ ],[ ],[ ],  [5],[ ],[3]],
 			[[6],[ ],[2],  [ ],[ ],[9],  [ ],[7],[ ]],
 			[[ ],[5],[ ],  [4],[3],[ ],  [ ],[ ],[ ]],
@@ -88,23 +88,57 @@ class Sudoku
 	def valid?(node, val)
 		line_valid?(node.row, val) and col_valid?(node.col, val) and square_valid?( get_square_key(node.row, node.col), val )
 	end
-	
-	def load_possibilities_for(node)
-		if !node.defined?
-			(1..9).to_a.each_with_index do |val, index|
-				node.possibilities << val if valid?(node, val)
-			end
-			node.possibilities.uniq!
+#--------------------- Core ------------------------------
+	def next
+		# row
+		(1..9).to_a.each_with_index do |val, index|
+			calculate!(index, :row)	
 		end
-		node.possibilities
+		# col
+		(1..9).to_a.each_with_index do |val, index|
+			calculate!(index, :col)	
+		end
+		# square
+		(1..9).to_a.each do |square_key|
+			calculate!(square_key, :square)
+		end
+		puts show
 	end
-	# TODO
-	# def reload_col_possiblities
-	# end
-	# def reload_row_possiblities
-	# end
-	# def reload_square_possiblities
-	# end
+
+	def one_possibilite!
+		data.each do |node|
+			if node.possibilities.one?
+				node.val = node.possibilities.first
+				reload_possibilities!
+			end
+		end
+	end
+	
+	def calculate!(num_or_square_key, type=:row)
+		one_possibilite!
+
+		case type
+		when :row
+			nodes = row(num_or_square_key).select(&:undefined?)
+		when :col
+			nodes = col(num_or_square_key).select(&:undefined?)
+		when :square
+			nodes = get_square(num_or_square_key).select(&:undefined?)
+		end
+		nodes.each_with_index do |node, index|
+			
+			node_review = nodes.select{|i| i!=node}.map(&:possibilities)
+			result = [node.possibilities, *node_review].inject(:-)
+
+			if result.one?
+				node.val = result.first
+				load_possibilities!
+			end
+		end
+		show
+	end
+#--------------------- end Core ------------------------------
+
 	def load_possibilities!
 		data.each do |node| 
 			load_possibilities_for(node)
@@ -114,6 +148,18 @@ class Sudoku
 			# 	node.defined=true
 			# end
 		end
+	end
+	alias_method :reload_possibilities!, :load_possibilities!
+
+	def load_possibilities_for(node)
+		if node.undefined?
+			node.possibilities = []
+			(1..9).to_a.each_with_index do |val, index|
+				node.possibilities << val if valid?(node, val)
+			end
+			node.possibilities.uniq!
+		end
+		node.possibilities
 	end
 
 	def get(*args)
@@ -136,6 +182,21 @@ class Sudoku
 			arr_nodes << get(pos)
 		end
 		arr_nodes
+	end
+	def get_all_line(num, type=:row)
+		arr_nodes = []
+		(1..9).to_a.each_with_index do |val, index|
+			node = get(num, index) if type==:row
+			node = get(index, num) if type==:col
+			arr_nodes << get(num, index)
+		end
+		arr_nodes
+	end	
+	def row(index)
+		get_all_line(index, :row)
+	end
+	def col(index)
+		get_all_line(index, :col)
 	end
 	def show
 		# table = Terminal::Table.new :rows => data.map(&:val).each_slice(9).to_a
@@ -164,8 +225,12 @@ class Node
 		@defined = !val.nil?
 	end
 	def val_color(color=:green)
-		val.to_s.send(color)
+		val.to_s.send(color) 
 		# val.to_s.blue.on_red #colorize(:color => :light_blue, :background => :red)
+	end
+	def val=(value)
+		@defined = true
+		@val = value
 	end
 	def possibilities_show
 		if self.possibilities.size==1 
@@ -177,7 +242,23 @@ class Node
 	def defined?
 		@defined
 	end
+	def undefined?
+		!self.defined?
+	end
 end
 
-game = Sudoku.new
+game = [
+  [[ ],[8],[ ],  [ ],[ ],[ ],  [5],[ ],[3]],
+  [[6],[ ],[2],  [ ],[ ],[9],  [ ],[7],[ ]],
+  [[ ],[5],[ ],  [4],[3],[ ],  [ ],[ ],[ ]],
+
+  [[8],[ ],[ ],  [1],[ ],[7],  [ ],[ ],[5]],
+  [[ ],[ ],[ ],  [9],[ ],[ ],  [7],[ ],[1]],
+  [[ ],[ ],[7],  [ ],[ ],[ ],  [ ],[ ],[ ]],
+
+  [[2],[ ],[ ],  [ ],[ ],[ ],  [ ],[ ],[ ]],
+  [[ ],[ ],[6],  [ ],[2],[ ],  [4],[1],[ ]],
+  [[ ],[ ],[ ],  [ ],[4],[ ],  [9],[ ],[ ]]
+]
+game = Sudoku.new game
 puts game.show
