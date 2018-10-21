@@ -3,6 +3,8 @@ sudoku-solver
 
 ## How run
 
+(Youtube Demo)[https://www.youtube.com/watch?v=eW1Ztm_PCfQ&t=5s]
+
 Execute that commands in your terminal:
 
 ```shell
